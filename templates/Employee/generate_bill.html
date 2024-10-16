@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}Generate Bill{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Generate Bill</h2>
+    
+    <form id="billForm" class="needs-validation" novalidate>
+        <!-- Customer Information -->
+        <h4>Customer Information</h4>
+        <div class="form-group">
+            <label for="customerName">Customer Name:</label>
+            <input type="text" class="form-control" id="customerName" placeholder="Enter customer name" required>
+            <div class="invalid-feedback">Please enter customer name.</div>
+        </div>
+        <div class="form-group">
+            <label for="customerMobile">Mobile No:</label>
+            <input type="tel" class="form-control" id="customerMobile" placeholder="Enter mobile number" required>
+            <div class="invalid-feedback">Please enter mobile number.</div>
+        </div>
+        <div class="form-group">
+            <label for="customerAddress">Address:</label>
+            <textarea class="form-control" id="customerAddress" rows="3" placeholder="Enter address" required></textarea>
+            <div class="invalid-feedback">Please enter address.</div>
+        </div>
+
+        <!-- Product Information -->
+        <h4 class="mt-4">Product Information</h4>
+        <div class="form-group">
+            <label for="productName">Product Name:</label>
+            <input type="text" class="form-control" id="productName" placeholder="Enter product name" required>
+            <div class="invalid-feedback">Please enter product name.</div>
+        </div>
+        <button type="button" id="searchProduct" class="btn btn-secondary mb-3">Search</button>
+        <div class="form-group">
+            <label for="productAvailable">Available:</label>
+            <select id="productAvailable" class="form-control" required disabled>
+                <option value="">Select availability</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+            </select>
+            <div class="invalid-feedback">Please select product availability.</div>
+        </div>
+        <div class="form-group">
+            <label for="productQuantity">Quantity:</label>
+            <input type="number" class="form-control" id="productQuantity" placeholder="Enter quantity" required disabled>
+            <div class="invalid-feedback">Please enter quantity.</div>
+        </div>
+        <div class="form-group">
+            <label for="productPrice">Price:</label>
+            <input type="number" class="form-control" id="productPrice" placeholder="Enter price" required disabled>
+            <div class="invalid-feedback">Please enter price.</div>
+        </div>
+
+        <!-- Total Payment and Payment Type -->
+        <h4 class="mt-4">Payment Information</h4>
+        <div class="form-group">
+            <label for="totalPayment">Total Payment:</label>
+            <input type="number" class="form-control" id="totalPayment" placeholder="Total payment" readonly>
+        </div>
+        <div class="form-group">
+            <label for="paymentType">Payment Type:</label>
+            <select id="paymentType" class="form-control" required>
+                <option value="cash">Cash</option>
+                <option value="credit_card">Credit Card</option>
+                <option value="online_payment">Online Payment</option>
+            </select>
+            <div class="invalid-feedback">Please select payment type.</div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Generate Bill</button>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const productAvailableSelect = document.getElementById('productAvailable');
+        const productQuantityInput = document.getElementById('productQuantity');
+        const productPriceInput = document.getElementById('productPrice');
+        const totalPaymentInput = document.getElementById('totalPayment');
+        const searchProductButton = document.getElementById('searchProduct');
+        const productNameInput = document.getElementById('productName');
+
+        searchProductButton.addEventListener('click', function() {
+            const productName = productNameInput.value.trim();
+            if (productName === '') {
+                alert('Please enter a product name to search.');
+                return;
+            }
+
+            // Simulate a backend check for product availability
+            // Replace this with your actual backend logic
+            const isAvailable = checkProductAvailability(productName); // This function should be implemented
+
+            if (isAvailable) {
+                alert('Product is available.');
+                productAvailableSelect.value = 'yes';
+                productQuantityInput.disabled = false;
+                productPriceInput.disabled = false;
+            } else {
+                alert('Product is not available. You cannot purchase this item.');
+                productAvailableSelect.value = 'no';
+                productQuantityInput.disabled = true;
+                productPriceInput.disabled = true;
+                productQuantityInput.value = '';
+                productPriceInput.value = '';
+                totalPaymentInput.value = '';
+            }
+        });
+
+        productQuantityInput.addEventListener('input', calculateTotal);
+        productPriceInput.addEventListener('input', calculateTotal);
+
+        function calculateTotal() {
+            const quantity = parseFloat(productQuantityInput.value) || 0;
+            const price = parseFloat(productPriceInput.value) || 0;
+            const totalPayment = quantity * price;
+            totalPaymentInput.value = totalPayment;
+        }
+
+        document.getElementById('billForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            // Get form data
+            const customerName = document.getElementById('customerName').value;
+            const customerMobile = document.getElementById('customerMobile').value;
+            const customerAddress = document.getElementById('customerAddress').value;
+            const productName = document.getElementById('productName').value;
+            const paymentType = document.getElementById('paymentType').value;
+
+            // Print data to console
+            console.log('Customer Name:', customerName);
+            console.log('Customer Mobile:', customerMobile);
+            console.log('Customer Address:', customerAddress);
+            console.log('Product Name:', productName);
+            console.log('Total Payment:', totalPaymentInput.value);
+            console.log('Payment Type:', paymentType);
+
+            // Reset the form
+            this.reset();
+            totalPaymentInput.value = ''; // Reset total payment
+            productQuantityInput.disabled = true; // Disable quantity input
+            productPriceInput.disabled = true; // Disable price input
+        });
+    });
+
+    // Simulated backend function to check product availability
+    function checkProductAvailability(productName) {
+        // Replace this logic with actual backend call
+        const availableProducts = ['Product A', 'Product B', 'Product C']; // Example product list
+        return availableProducts.includes(productName);
+    }
+</script>
+{% endblock %}

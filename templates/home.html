@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">Available Routes</h1>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Page</th>
+                <th scope="col">Link</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Home</td>
+                <td><a href="/">Home</a></td>
+            </tr>
+            <tr>
+                <td>Admin Dashboard</td>
+                <td><a href="/admin_dashboard">Admin Dashboard</a></td>
+            </tr>
+            <tr>
+                <td>Profile</td>
+                <td><a href="/profile">Profile</a></td>
+            </tr>
+            <tr>
+                <td>Employee Management</td>
+                <td><a href="/employee-management">Employee Management</a></td>
+            </tr>
+            <tr>
+                <td>Inventory Management</td>
+                <td><a href="/inventory-management">Inventory Management</a></td>
+            </tr>
+            <tr>
+                <td>Statistics</td>
+                <td><a href="/statistics">Statistics</a></td>
+            </tr>
+            <tr>
+                <td>Generate Bill</td>
+                <td><a href="/generate_bill">Generate Bill</a></td>  
+            </tr>
+            <tr>
+                <td>Admin Register</td>
+                <td><a href="/register">Admin Register</a></td>  
+            </tr>
+            <tr>
+                <td>Login</td>
+                <td><a href="/login">Login</a></td>  
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}
