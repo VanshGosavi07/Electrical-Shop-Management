@@ -140,7 +140,7 @@
         document.getElementById('billForm').addEventListener('submit', function (event) {
             event.preventDefault();
 
-            // Form validation (optional)
+            // Form validation
             if (!this.checkValidity()) {
                 event.stopPropagation();
                 this.classList.add('was-validated');
@@ -169,7 +169,7 @@
                 paymentType: paymentType
             };
 
-            // Send the bill data to the server (you can implement this route in Flask)
+            // Send the bill data to the server and handle the PDF download
             fetch('/submit_bill', {
                 method: 'POST',
                 headers: {
@@ -177,19 +177,38 @@
                 },
                 body: JSON.stringify(billData),
             })
-                .then(response => response.json())
-                .then(data => {
-                    alert('Bill generated successfully!');
-                    // Reset the form
-                    document.getElementById('billForm').reset();
-                    totalPaymentInput.value = '';
-                    productQuantityInput.disabled = true;
-                    productPriceInput.disabled = true;
-                    productAvailableSelect.value = '';
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-                });
+            .then(response => {
+                if (response.ok) {
+                    return response.blob();  // Get the PDF as a blob
+                } else {
+                    return response.json().then(error => {
+                        throw new Error(error.message);
+                    });
+                }
+            })
+            .then(blob => {
+                // Create a link to download the PDF
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `bill_receipt_${customerName}.pdf`;  // Name the downloaded file
+                document.body.appendChild(a);
+                a.click();  // Trigger the download
+                a.remove();
+                
+                // Optionally, you can open the PDF in a new tab
+                window.open(url, '_blank');
+                
+                // Reset the form
+                document.getElementById('billForm').reset();
+                totalPaymentInput.value = '';
+                productQuantityInput.disabled = true;
+                productPriceInput.disabled = true;
+                productAvailableSelect.value = '';
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
         });
     });
 </script>

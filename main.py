@@ -1,3 +1,4 @@
+from flask import make_response, request, Flask
 from flask import Flask, render_template, request, redirect, url_for, send_file, jsonify
 from model import db, Employee, InventoryItem, Admin, Bill
 from werkzeug.security import generate_password_hash
@@ -112,6 +113,7 @@ def check_product(product_name):
 @app.route('/submit_bill', methods=['POST'])
 def submit_bill():
     data = request.get_json()
+
     # Extract data from the JSON
     customer_name = data['customerName']
     customer_mobile = data['customerMobile']
@@ -144,7 +146,38 @@ def submit_bill():
         )
         db.session.add(new_bill)
         db.session.commit()
-        return jsonify({'status': 'success'}), 200
+
+        # Generate PDF
+        pdf = FPDF()
+        pdf.add_page()
+
+        # Set fonts
+        pdf.set_font("Arial", size=12)
+
+        # Add content to the PDF
+        pdf.cell(200, 10, txt="Bill Receipt", ln=True, align='C')
+
+        pdf.cell(200, 10, txt=f"Customer Name: {customer_name}", ln=True)
+        pdf.cell(200, 10, txt=f"Mobile No: {customer_mobile}", ln=True)
+        pdf.cell(200, 10, txt=f"Address: {customer_address}", ln=True)
+
+        pdf.cell(200, 10, txt="Product Details:", ln=True)
+        pdf.cell(200, 10, txt=f"Product: {product_name}", ln=True)
+        pdf.cell(200, 10, txt=f"Quantity: {quantity}", ln=True)
+        pdf.cell(200, 10, txt=f"Price per unit: ${price}", ln=True)
+        pdf.cell(200, 10, txt=f"Total Payment: ${total_payment}", ln=True)
+        pdf.cell(200, 10, txt=f"Payment Type: {payment_type}", ln=True)
+
+        # Create the PDF in memory
+        pdf_output = pdf.output(dest='S').encode('latin1')
+
+        # Return PDF as downloadable file
+        response = make_response(pdf_output)
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename=bill_receipt_{
+            customer_name}.pdf'
+        return response
+
     else:
         return jsonify({'status': 'error', 'message': 'Insufficient stock or product not found.'}), 400
 
