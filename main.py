@@ -1,7 +1,8 @@
+from flask import session, flash, session
 from flask import make_response, request, Flask
 from flask import Flask, render_template, request, redirect, url_for, send_file, jsonify
 from model import db, Employee, InventoryItem, Admin, Bill
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 from fpdf import FPDF
 import os
 
@@ -10,6 +11,8 @@ app = Flask(__name__)
 # Configurations for the SQLite database
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shop.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.secret_key = '17Vansh17'  # Replace with a strong secret key
+
 
 db.init_app(app)
 
@@ -24,9 +27,34 @@ def admin_dashboard():
     return render_template('Admin/Admin_dashboard.html')
 
 
-@app.route('/profile')
+@app.route('/profile', methods=['GET', 'POST'])
 def profile():
-    return render_template('profiles.html')
+    user_id = session.get('user_id')
+    user_type = session.get('user_type')
+
+    if not user_id:
+        flash('You need to be logged in to view your profile.', 'warning')
+        return redirect(url_for('login'))
+
+    # Retrieve user based on user type
+    if user_type == 'admin':
+        user = Admin.query.get(user_id)
+    elif user_type == 'employee':
+        user = Employee.query.get(user_id)
+    else:
+        flash('Invalid user type.', 'danger')
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        user.name = request.form['full_name']
+        user.email = request.form['email']
+        user.mobile_no = request.form['phone']
+        user.address = request.form['address']
+        db.session.commit()
+        flash('Profile updated successfully!', 'success')
+        return redirect(url_for('profile'))
+
+    return render_template('profiles.html', user=user)
 
 
 @app.route('/employee-management', methods=['GET', 'POST'])
@@ -182,8 +210,34 @@ def submit_bill():
         return jsonify({'status': 'error', 'message': 'Insufficient stock or product not found.'}), 400
 
 
-@app.route('/login')
+@app.route('/login', methods=['GET', 'POST'])
 def login():
+    if request.method == 'POST':
+        # Get form data
+        username = request.form['username']
+        password = request.form['password']
+        user_type = request.form['userType']  # Added userType
+
+        # Check if the user is an Admin
+        if user_type == 'admin':
+            user = Admin.query.filter_by(username=username).first()
+        else:  # Assume employee
+            user = Employee.query.filter_by(username=username).first()
+
+        # Verify the user
+        if user and check_password_hash(user.password, password):  # Use hash check
+            session['user_id'] = user.id
+            session['user_type'] = user_type  # Store user type in session
+            flash('Login successful!', 'success')
+            if user_type == 'admin':
+                return redirect(url_for('admin_dashboard'))
+            else:
+                # Create this route
+                # Define this route
+                return redirect(url_for('generate_bill'))
+        else:
+            flash('Invalid credentials. Please try again.', 'danger')
+
     return render_template('login.html')
 
 
@@ -209,6 +263,14 @@ def register():
         return redirect(url_for('login'))
 
     return render_template('Admin/register.html')
+
+
+@app.route('/logout')
+def logout():
+    # Clear the session
+    session.clear()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('login'))
 
 
 if __name__ == '__main__':
