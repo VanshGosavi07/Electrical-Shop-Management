@@ -3,6 +3,36 @@
 {% block title %}Generate Bill{% endblock %}
 
 {% block content %}
+<nav class="navbar navbar-expand-lg" style="background-color: blue;">
+    <div class="container-fluid">
+        <a class="navbar-brand text-white" href="{{ url_for('home') }}">Navbar</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                {% if 'user_id' in session %}
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('generate_bill') }}">Generate Bill</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('profile') }}">Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('logout') }}">Log Out</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('login') }}">Login</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+  </nav>
+
 <div class="container mt-5">
     <h2 class="text-center mb-4">Generate Bill</h2>
 
@@ -177,38 +207,38 @@
                 },
                 body: JSON.stringify(billData),
             })
-            .then(response => {
-                if (response.ok) {
-                    return response.blob();  // Get the PDF as a blob
-                } else {
-                    return response.json().then(error => {
-                        throw new Error(error.message);
-                    });
-                }
-            })
-            .then(blob => {
-                // Create a link to download the PDF
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `bill_receipt_${customerName}.pdf`;  // Name the downloaded file
-                document.body.appendChild(a);
-                a.click();  // Trigger the download
-                a.remove();
-                
-                // Optionally, you can open the PDF in a new tab
-                window.open(url, '_blank');
-                
-                // Reset the form
-                document.getElementById('billForm').reset();
-                totalPaymentInput.value = '';
-                productQuantityInput.disabled = true;
-                productPriceInput.disabled = true;
-                productAvailableSelect.value = '';
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
+                .then(response => {
+                    if (response.ok) {
+                        return response.blob();  // Get the PDF as a blob
+                    } else {
+                        return response.json().then(error => {
+                            throw new Error(error.message);
+                        });
+                    }
+                })
+                .then(blob => {
+                    // Create a link to download the PDF
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `bill_receipt_${customerName}.pdf`;  // Name the downloaded file
+                    document.body.appendChild(a);
+                    a.click();  // Trigger the download
+                    a.remove();
+
+                    // Optionally, you can open the PDF in a new tab
+                    window.open(url, '_blank');
+
+                    // Reset the form
+                    document.getElementById('billForm').reset();
+                    totalPaymentInput.value = '';
+                    productQuantityInput.disabled = true;
+                    productPriceInput.disabled = true;
+                    productAvailableSelect.value = '';
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
         });
     });
 </script>

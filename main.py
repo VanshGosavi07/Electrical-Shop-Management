@@ -1,10 +1,9 @@
-from flask import session, flash, session
-from flask import make_response, request, Flask
-from flask import Flask, render_template, request, redirect, url_for, send_file, jsonify
-from model import db, Employee, InventoryItem, Admin, Bill
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, make_response
 from werkzeug.security import generate_password_hash, check_password_hash
 from fpdf import FPDF
+from model import db, Employee, InventoryItem, Admin, Bill
 import os
+from functools import wraps
 
 app = Flask(__name__)
 
@@ -13,8 +12,27 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shop.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = '17Vansh17'  # Replace with a strong secret key
 
-
 db.init_app(app)
+
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('You need to be logged in to view this page.', 'warning')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session or session.get('user_type') != 'admin':
+            flash('You need to be an admin to view this page.', 'danger')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 @app.route('/')
@@ -23,20 +41,24 @@ def home():
 
 
 @app.route('/admin_dashboard')
+@login_required
+@admin_required
 def admin_dashboard():
     return render_template('Admin/Admin_dashboard.html')
 
 
 @app.route('/profile', methods=['GET', 'POST'])
+@login_required
 def profile():
+    # Check if the user is logged in by verifying session
     user_id = session.get('user_id')
     user_type = session.get('user_type')
 
-    if not user_id:
+    if not user_id or not user_type:
         flash('You need to be logged in to view your profile.', 'warning')
         return redirect(url_for('login'))
 
-    # Retrieve user based on user type
+    # Retrieve the user based on the user type stored in session
     if user_type == 'admin':
         user = Admin.query.get(user_id)
     elif user_type == 'employee':
@@ -45,19 +67,34 @@ def profile():
         flash('Invalid user type.', 'danger')
         return redirect(url_for('login'))
 
+    # Make sure the user exists in the database
+    if not user:
+        flash('User not found.', 'danger')
+        return redirect(url_for('login'))
+
+    # Handle form submission
     if request.method == 'POST':
-        user.name = request.form['full_name']
-        user.email = request.form['email']
-        user.mobile_no = request.form['phone']
-        user.address = request.form['address']
-        db.session.commit()
-        flash('Profile updated successfully!', 'success')
+        try:
+            user.name = request.form['full_name']
+            user.email = request.form['email']
+            user.mobile_no = request.form['phone']
+            user.address = request.form['address']
+
+            # Save the updated user information in the database
+            db.session.commit()
+            flash('Profile updated successfully!', 'success')
+        except Exception as e:
+            flash(f'Error updating profile: {e}', 'danger')
+
         return redirect(url_for('profile'))
 
+    # Render the profile template with the user information
     return render_template('profiles.html', user=user)
 
 
 @app.route('/employee-management', methods=['GET', 'POST'])
+@login_required
+@admin_required
 def employee_management():
     if request.method == 'POST':
         # Get form data
@@ -86,6 +123,8 @@ def employee_management():
 
 
 @app.route('/inventory-management', methods=['GET', 'POST'])
+@login_required
+@admin_required
 def inventory_management():
     if request.method == 'POST':
         name = request.form['itemName']
@@ -111,11 +150,14 @@ def inventory_management():
 
 
 @app.route('/statistics')
+@login_required
+@admin_required
 def statistics():
     return render_template("Admin/statistics.html")
 
 
 @app.route('/generate_bill')
+@login_required
 def generate_bill():
     # Query to get all inventory items
     products = [item.name for item in InventoryItem.query.all()]
@@ -124,6 +166,7 @@ def generate_bill():
 
 
 @app.route('/check_product/<product_name>', methods=['GET'])
+@login_required
 def check_product(product_name):
     # Query the database to find the product
     product = InventoryItem.query.filter_by(name=product_name).first()
@@ -139,6 +182,7 @@ def check_product(product_name):
 
 
 @app.route('/submit_bill', methods=['POST'])
+@login_required
 def submit_bill():
     data = request.get_json()
 
@@ -154,6 +198,9 @@ def submit_bill():
 
     # Find the product in the inventory
     product = InventoryItem.query.filter_by(name=product_name).first()
+    employee_id = session['user_id']  # Use the current logged-in employee ID
+    employee = Employee.query.get(employee_id)  # Fetch employee details
+
     if product and product.quantity >= quantity:
         # Update product quantity
         product.quantity -= quantity
@@ -169,8 +216,7 @@ def submit_bill():
             price=price,
             total_payment=total_payment,
             payment_type=payment_type,
-            employee_name='Employee Name',  # Replace with actual employee name
-            employee_id=1  # Replace with actual employee ID
+            employee_id=employee_id  # Use the current logged-in employee ID
         )
         db.session.add(new_bill)
         db.session.commit()
@@ -182,19 +228,46 @@ def submit_bill():
         # Set fonts
         pdf.set_font("Arial", size=12)
 
-        # Add content to the PDF
+        # Title
         pdf.cell(200, 10, txt="Bill Receipt", ln=True, align='C')
 
-        pdf.cell(200, 10, txt=f"Customer Name: {customer_name}", ln=True)
-        pdf.cell(200, 10, txt=f"Mobile No: {customer_mobile}", ln=True)
-        pdf.cell(200, 10, txt=f"Address: {customer_address}", ln=True)
+        # Customer Information
+        pdf.set_font("Arial", style='B', size=12)
+        pdf.cell(0, 10, "Customer Information", ln=True)
+        pdf.set_font("Arial", size=12)
+        pdf.cell(0, 10, f"Name: {customer_name}", ln=True)
+        pdf.cell(0, 10, f"Mobile No: {customer_mobile}", ln=True)
+        pdf.cell(0, 10, f"Address: {customer_address}", ln=True)
 
-        pdf.cell(200, 10, txt="Product Details:", ln=True)
-        pdf.cell(200, 10, txt=f"Product: {product_name}", ln=True)
-        pdf.cell(200, 10, txt=f"Quantity: {quantity}", ln=True)
-        pdf.cell(200, 10, txt=f"Price per unit: ${price}", ln=True)
-        pdf.cell(200, 10, txt=f"Total Payment: ${total_payment}", ln=True)
-        pdf.cell(200, 10, txt=f"Payment Type: {payment_type}", ln=True)
+        # Employee Information
+        pdf.set_font("Arial", style='B', size=12)
+        pdf.cell(0, 10, "Employee Information", ln=True)
+        pdf.set_font("Arial", size=12)
+        pdf.cell(0, 10, f"Employee Name: {employee.name}", ln=True)
+        pdf.cell(0, 10, f"Employee ID: {employee.id}", ln=True)
+
+        # Product Details in a Table Format
+        pdf.set_font("Arial", style='B', size=12)
+        pdf.cell(0, 10, "Product Details", ln=True)
+        pdf.set_font("Arial", size=12)
+
+        pdf.cell(60, 10, "Product", border=1)
+        pdf.cell(30, 10, "Quantity", border=1)
+        pdf.cell(30, 10, "Price", border=1)
+        pdf.cell(40, 10, "Total Payment", border=1)
+        pdf.cell(0, 10, "", ln=True)  # Line break
+
+        pdf.cell(60, 10, product_name, border=1)
+        pdf.cell(30, 10, str(quantity), border=1)
+        pdf.cell(30, 10, f"${price:.2f}", border=1)
+        pdf.cell(40, 10, f"${total_payment:.2f}", border=1)
+        pdf.cell(0, 10, "", ln=True)  # Line break
+
+        # Payment Details
+        pdf.set_font("Arial", style='B', size=12)
+        pdf.cell(0, 10, txt="Payment Details:", ln=True)
+        pdf.set_font("Arial", size=12)
+        pdf.cell(40, 10, txt=f"Payment Type: {payment_type}", ln=True)
 
         # Create the PDF in memory
         pdf_output = pdf.output(dest='S').encode('latin1')
@@ -232,8 +305,6 @@ def login():
             if user_type == 'admin':
                 return redirect(url_for('admin_dashboard'))
             else:
-                # Create this route
-                # Define this route
                 return redirect(url_for('generate_bill'))
         else:
             flash('Invalid credentials. Please try again.', 'danger')
@@ -266,6 +337,7 @@ def register():
 
 
 @app.route('/logout')
+@login_required
 def logout():
     # Clear the session
     session.clear()
