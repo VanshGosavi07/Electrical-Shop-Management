@@ -4,46 +4,72 @@
 
 {% block content %}
 <nav class="navbar navbar-expand-lg" style="background-color: blue;">
-    <div class="container-fluid">
-      <a class="navbar-brand text-white" href="#">Navbar</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
+  <div class="container-fluid">
+      <a class="navbar-brand text-white" href="{{ url_for('home') }}">Navbar</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+              data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+              aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <!-- Dashboard -->
-          <li class="nav-item">
-            <a class="nav-link text-white" href="#">Dashboard</a>
-          </li>
-          <!-- Profile -->
-          <li class="nav-item">
-            <a class="nav-link text-white" href="/profile">Profile</a>
-          </li>
-          <!-- Log Out -->
-          <li class="nav-item">
-            <a class="nav-link text-white" href="/logout">Log Out</a>
-          </li>
-        </ul>
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              {% if 'user_id' in session %}
+                  <li class="nav-item">
+                      <a class="nav-link text-white" href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                  </li>
+                  <li class="nav-item">
+                      <a class="nav-link text-white" href="{{ url_for('admin_profile') }}">Profile</a>
+                  </li>
+                  <li class="nav-item">
+                      <a class="nav-link text-white" href="{{ url_for('logout') }}">Log Out</a>
+                  </li>
+              {% else %}
+                  <li class="nav-item">
+                      <a class="nav-link text-white" href="{{ url_for('login') }}">Login</a>
+                  </li>
+                  <li class="nav-item">
+                      <a class="nav-link text-white" href="{{ url_for('register') }}">Register</a>
+                  </li>
+              {% endif %}
+          </ul>
       </div>
-    </div>
-  </nav>
-  
+  </div>
+</nav>
+
+<!-- Flash Messages Section -->
+<div class="container mt-3">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    {% endwith %}
+</div>  
+
 <div class="container mt-5">
     <h2 class="text-center mb-4"><i class="fas fa-boxes"></i> Inventory Management</h2>
-    <form id="inventoryForm" class="needs-validation" novalidate>
+    <form id="inventoryForm" method="POST">
         <div class="form-group">
             <label for="itemName">Item Name:</label>
-            <input type="text" class="form-control" id="itemName" placeholder="Enter item name" required>
+            <input type="text" class="form-control" name="itemName" id="itemName" placeholder="Enter item name" required>
             <div class="invalid-feedback">Please enter item name.</div>
         </div>
         <div class="form-group">
             <label for="itemQuantity">Item Quantity:</label>
-            <input type="number" class="form-control" id="itemQuantity" placeholder="Enter item quantity" required>
+            <input type="number" class="form-control" name="itemQuantity" id="itemQuantity" placeholder="Enter item quantity" required>
             <div class="invalid-feedback">Please enter item quantity.</div>
         </div>
         <div class="form-group">
             <label for="itemPrice">Item Price:</label>
-            <input type="number" class="form-control" id="itemPrice" placeholder="Enter item price" required>
+            <input type="number" class="form-control" name="itemPrice" id="itemPrice" placeholder="Enter item price" required>
             <div class="invalid-feedback">Please enter item price.</div>
         </div>
         <button type="submit" class="btn btn-primary">Add/Update Item</button>
@@ -57,78 +83,18 @@
                 <th>Item Name</th>
                 <th>Quantity</th>
                 <th>Price</th>
-                <th>Actions</th>
             </tr>
         </thead>
         <tbody id="inventory-list">
-            <!-- Inventory items will be displayed here -->
+            {% for item in items %}
+            <tr>
+                <td>{{ item.id }}</td>
+                <td>{{ item.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.price }}</td>
+            </tr>
+            {% endfor %}
         </tbody>
     </table>
 </div>
-
-<script>
-    let inventory = [];
-    let currentId = 1; // To keep track of the item IDs
-
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('inventoryForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            // Get form data
-            const item = {
-                id: currentId++,
-                name: document.getElementById('itemName').value,
-                quantity: document.getElementById('itemQuantity').value,
-                price: document.getElementById('itemPrice').value
-            };
-
-            // Add item to the inventory array
-            inventory.push(item);
-
-            // Add item to the table
-            addItemToTable(item);
-            console.log(item);
-
-            // Reset the form
-            this.reset();
-        });
-    });
-
-    function addItemToTable(item) {
-        const inventoryList = document.getElementById('inventory-list');
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${item.id}</td>
-            <td>${item.name}</td>
-            <td>${item.quantity}</td>
-            <td>${item.price}</td>
-            <td>
-                <button class="btn btn-warning btn-sm" onclick="editItem(${item.id})">Edit</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteItem(${item.id})">Delete</button>
-            </td>
-        `;
-        inventoryList.appendChild(row);
-    }
-
-    function editItem(id) {
-        const item = inventory.find(i => i.id === id);
-        if (item) {
-            document.getElementById('itemName').value = item.name;
-            document.getElementById('itemQuantity').value = item.quantity;
-            document.getElementById('itemPrice').value = item.price;
-            deleteItem(id); // Remove the item from the list to allow updating
-        }
-    }
-
-    function deleteItem(id) {
-        inventory = inventory.filter(i => i.id !== id);
-        renderInventory();
-    }
-
-    function renderInventory() {
-        const inventoryList = document.getElementById('inventory-list');
-        inventoryList.innerHTML = ''; // Clear the current list
-        inventory.forEach(item => addItemToTable(item)); // Re-add items to the table
-    }
-</script>
 {% endblock %}

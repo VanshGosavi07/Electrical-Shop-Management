@@ -3,50 +3,63 @@
 {% block title %}Login Page{% endblock %}
 
 {% block content %}
-    <nav class="navbar navbar-expand-lg navbar-light bg-primary">
-        <div class="navbar-brand">
-            <h2 class="text-white" style="font-size: 24px; font-weight: bold;">Electronic Shop Management System</h2>
-        </div>
-    </nav>
-    
-    <div class="container mt-5 d-flex justify-content-center align-items-center vh-50">
-        <div class="card bg-light shadow-lg" style="width: 20rem;">
-            <div class="card-body">
-                <h2 class="text-center text-primary">Login</h2>
-                <form id="loginForm" class="mt-4">
-                    <div class="form-group mb-3">
-                        <label for="username">Username</label>
-                        <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" required>
+<nav class="navbar navbar-expand-lg navbar-light bg-primary">
+    <div class="navbar-brand">
+        <h2 class="text-white" style="font-size: 24px; font-weight: bold;">Electronic Shop Management System</h2>
+    </div>
+</nav>
+
+<div class="container mt-5 d-flex justify-content-center align-items-center vh-50">
+    <div class="card bg-light shadow-lg" style="width: 20rem;">
+        <div class="card-body">
+            <h2 class="text-center text-primary">Login</h2>
+            <!-- Flash messages for login errors -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="alert alert-dismissible">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
                     </div>
-                    <div class="form-group mb-3">
-                        <label for="password">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="userType">User Type</label>
-                        <select class="form-control" id="userType" name="userType" required>
-                            <option value="" disabled selected>Select User Type</option>
-                            <option value="admin">Admin</option>
-                            <option value="employee">Employee</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-block">Login</button>
-                </form>
-                <p class="text-center mt-3">Don't have an account? <a href="register.html">Register here</a></p>
-            </div>
+                {% endif %}
+            {% endwith %}
+            <form id="loginForm" class="mt-4" method="POST" action="{{ url_for('login') }}">
+                <div class="form-group mb-3">
+                    <label for="username">Username</label>
+                    <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" required>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="password">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="userType">User Type</label>
+                    <select class="form-control" id="userType" name="userType" required>
+                        <option value="" disabled selected>Select User Type</option>
+                        <option value="admin">Admin</option>
+                        <option value="employee">Employee</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Login</button>
+            </form>
+            <p class="text-center mt-3">Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
         </div>
     </div>
+</div>
 
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', function(event) {
-            event.preventDefault(); // Prevent form from submitting normally
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const userType = document.getElementById('userType').value;
-            console.log('Username:', username);
-            console.log('Password:', password);
-            console.log('User Type:', userType);
-            // Additional functionality can go here
-        });
-    </script>
+<script>
+    document.getElementById('loginForm').addEventListener('submit', function (event) {
+        event.preventDefault(); // Prevent form from submitting normally
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const userType = document.getElementById('userType').value;
+
+        console.log('Username:', username);
+        console.log('Password:', password);
+        console.log('User Type:', userType);
+        
+        // Perform form validation or AJAX if needed
+        this.submit(); // Submit the form programmatically
+    });
+</script>
 {% endblock %}

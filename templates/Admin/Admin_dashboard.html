@@ -8,7 +8,7 @@
 
     <nav class="navbar navbar-expand-lg" style="background-color: blue;">
         <div class="container-fluid">
-            <a class="navbar-brand text-white" href="#">Navbar</a>
+            <a class="navbar-brand text-white" href="{{ url_for('home') }}">Navbar</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                 data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
                 aria-label="Toggle navigation">
@@ -16,24 +16,45 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <!-- Dashboard -->
+                    {% if 'user_id' in session %}
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="#">Dashboard</a>
+                        <a class="nav-link text-white" href="{{ url_for('admin_dashboard') }}">Dashboard</a>
                     </li>
-                    <!-- Profile -->
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="/profile">Profile</a>
+                        <a class="nav-link text-white" href="{{ url_for('admin_profile') }}">Profile</a>
                     </li>
-                    <!-- Log Out -->
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="/logout">Log Out</a>
+                        <a class="nav-link text-white" href="{{ url_for('logout') }}">Log Out</a>
                     </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('login') }}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('register') }}">Register</a>
+                    </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
-
-
+    <!-- Flash Messages Section -->
+<div class="container mt-3">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    {% endwith %}
+</div>
 
     <!-- Main Content -->
     <div class="container-fluid mt-4">

@@ -3,9 +3,58 @@
 {% block title %}Generate Bill{% endblock %}
 
 {% block content %}
+<nav class="navbar navbar-expand-lg" style="background-color: blue;">
+    <div class="container-fluid">
+        <a class="navbar-brand text-white" href="{{ url_for('home') }}">Navbar</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                {% if 'user_id' in session %}
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('generate_bill') }}">Generate Bill</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('employee_profile') }}">Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('logout') }}">Log Out</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('login') }}">Login</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+  </nav>
+
+  
+<!-- Flash Messages Section -->
+<div class="container mt-3">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    {% endwith %}
+</div>
+  
 <div class="container mt-5">
     <h2 class="text-center mb-4">Generate Bill</h2>
-    
+
     <form id="billForm" class="needs-validation" novalidate>
         <!-- Customer Information -->
         <h4>Customer Information</h4>
@@ -21,7 +70,8 @@
         </div>
         <div class="form-group">
             <label for="customerAddress">Address:</label>
-            <textarea class="form-control" id="customerAddress" rows="3" placeholder="Enter address" required></textarea>
+            <textarea class="form-control" id="customerAddress" rows="3" placeholder="Enter address"
+                required></textarea>
             <div class="invalid-feedback">Please enter address.</div>
         </div>
 
@@ -29,8 +79,14 @@
         <h4 class="mt-4">Product Information</h4>
         <div class="form-group">
             <label for="productName">Product Name:</label>
-            <input type="text" class="form-control" id="productName" placeholder="Enter product name" required>
-            <div class="invalid-feedback">Please enter product name.</div>
+            <select class="form-control" id="productName" required>
+                <option value="">Select a product</option>
+                <!-- Populate the dropdown with products -->
+                {% for product in products %}
+                <option value="{{ product }}">{{ product }}</option>
+                {% endfor %}
+            </select>
+            <div class="invalid-feedback">Please select a product.</div>
         </div>
         <button type="button" id="searchProduct" class="btn btn-secondary mb-3">Search</button>
         <div class="form-group">
@@ -44,7 +100,8 @@
         </div>
         <div class="form-group">
             <label for="productQuantity">Quantity:</label>
-            <input type="number" class="form-control" id="productQuantity" placeholder="Enter quantity" required disabled>
+            <input type="number" class="form-control" id="productQuantity" placeholder="Enter quantity" required
+                disabled>
             <div class="invalid-feedback">Please enter quantity.</div>
         </div>
         <div class="form-group">
@@ -74,82 +131,135 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const productAvailableSelect = document.getElementById('productAvailable');
         const productQuantityInput = document.getElementById('productQuantity');
         const productPriceInput = document.getElementById('productPrice');
         const totalPaymentInput = document.getElementById('totalPayment');
         const searchProductButton = document.getElementById('searchProduct');
-        const productNameInput = document.getElementById('productName');
+        const productNameSelect = document.getElementById('productName');
 
-        searchProductButton.addEventListener('click', function() {
-            const productName = productNameInput.value.trim();
+        searchProductButton.addEventListener('click', function () {
+            const productName = productNameSelect.value;
             if (productName === '') {
-                alert('Please enter a product name to search.');
+                alert('Please select a product to search.');
                 return;
             }
 
-            // Simulate a backend check for product availability
-            // Replace this with your actual backend logic
-            const isAvailable = checkProductAvailability(productName); // This function should be implemented
+            // AJAX request to the server to check product availability
+            fetch(`/check_product/${encodeURIComponent(productName)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.available === 'yes') {
+                        alert('Product is available.');
+                        productAvailableSelect.value = 'yes';
+                        productQuantityInput.disabled = false; // Allow user to input quantity
+                        productPriceInput.disabled = true;  // Disable price input
 
-            if (isAvailable) {
-                alert('Product is available.');
-                productAvailableSelect.value = 'yes';
-                productQuantityInput.disabled = false;
-                productPriceInput.disabled = false;
-            } else {
-                alert('Product is not available. You cannot purchase this item.');
-                productAvailableSelect.value = 'no';
-                productQuantityInput.disabled = true;
-                productPriceInput.disabled = true;
-                productQuantityInput.value = '';
-                productPriceInput.value = '';
-                totalPaymentInput.value = '';
-            }
+                        // Fill in the price field, but leave the quantity for user input
+                        productPriceInput.value = data.price;
+
+                        // Reset total payment when a new product is selected
+                        totalPaymentInput.value = '';
+                    } else {
+                        alert('Product is not available. You cannot purchase this item.');
+                        productAvailableSelect.value = 'no';
+                        productQuantityInput.disabled = true;
+                        productPriceInput.disabled = true;
+                        productQuantityInput.value = '';
+                        productPriceInput.value = '';
+                        totalPaymentInput.value = '';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching product details:', error);
+                });
         });
 
+        // Calculate total payment when the user inputs quantity or when the price is set
         productQuantityInput.addEventListener('input', calculateTotal);
-        productPriceInput.addEventListener('input', calculateTotal);
 
         function calculateTotal() {
             const quantity = parseFloat(productQuantityInput.value) || 0;
             const price = parseFloat(productPriceInput.value) || 0;
             const totalPayment = quantity * price;
-            totalPaymentInput.value = totalPayment;
+            totalPaymentInput.value = totalPayment.toFixed(2);
         }
 
-        document.getElementById('billForm').addEventListener('submit', function(event) {
+        document.getElementById('billForm').addEventListener('submit', function (event) {
             event.preventDefault();
+
+            // Form validation
+            if (!this.checkValidity()) {
+                event.stopPropagation();
+                this.classList.add('was-validated');
+                return;
+            }
 
             // Get form data
             const customerName = document.getElementById('customerName').value;
             const customerMobile = document.getElementById('customerMobile').value;
             const customerAddress = document.getElementById('customerAddress').value;
             const productName = document.getElementById('productName').value;
+            const productQuantity = document.getElementById('productQuantity').value;
+            const productPrice = document.getElementById('productPrice').value;
+            const totalPayment = totalPaymentInput.value;
             const paymentType = document.getElementById('paymentType').value;
 
-            // Print data to console
-            console.log('Customer Name:', customerName);
-            console.log('Customer Mobile:', customerMobile);
-            console.log('Customer Address:', customerAddress);
-            console.log('Product Name:', productName);
-            console.log('Total Payment:', totalPaymentInput.value);
-            console.log('Payment Type:', paymentType);
+            // Prepare data to send to the server
+            const billData = {
+                customerName: customerName,
+                customerMobile: customerMobile,
+                customerAddress: customerAddress,
+                productName: productName,
+                productQuantity: productQuantity,
+                productPrice: productPrice,
+                totalPayment: totalPayment,
+                paymentType: paymentType
+            };
 
-            // Reset the form
-            this.reset();
-            totalPaymentInput.value = ''; // Reset total payment
-            productQuantityInput.disabled = true; // Disable quantity input
-            productPriceInput.disabled = true; // Disable price input
+            // Send the bill data to the server and handle the PDF download
+            fetch('/submit_bill', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(billData),
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response.blob();  // Get the PDF as a blob
+                    } else {
+                        return response.json().then(error => {
+                            throw new Error(error.message);
+                        });
+                    }
+                })
+                .then(blob => {
+                    // Create a link to download the PDF
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `bill_receipt_${customerName}.pdf`;  // Name the downloaded file
+                    document.body.appendChild(a);
+                    a.click();  // Trigger the download
+                    a.remove();
+
+                    // Optionally, you can open the PDF in a new tab
+                    window.open(url, '_blank');
+
+                    // Reset the form
+                    document.getElementById('billForm').reset();
+                    totalPaymentInput.value = '';
+                    productQuantityInput.disabled = true;
+                    productPriceInput.disabled = true;
+                    productAvailableSelect.value = '';
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
         });
     });
-
-    // Simulated backend function to check product availability
-    function checkProductAvailability(productName) {
-        // Replace this logic with actual backend call
-        const availableProducts = ['Product A', 'Product B', 'Product C']; // Example product list
-        return availableProducts.includes(productName);
-    }
 </script>
+
 {% endblock %}
