@@ -47,50 +47,56 @@ def admin_dashboard():
     return render_template('Admin/Admin_dashboard.html')
 
 
-@app.route('/profile', methods=['GET', 'POST'])
+@app.route('/admin_profile', methods=['GET', 'POST'])
 @login_required
-def profile():
-    # Check if the user is logged in by verifying session
+def admin_profile():
     user_id = session.get('user_id')
-    user_type = session.get('user_type')
-
-    if not user_id or not user_type:
-        flash('You need to be logged in to view your profile.', 'warning')
+    
+    admin = Admin.query.get(user_id)
+    if not admin:
+        flash('Admin not found.', 'danger')
         return redirect(url_for('login'))
 
-    # Retrieve the user based on the user type stored in session
-    if user_type == 'admin':
-        user = Admin.query.get(user_id)
-    elif user_type == 'employee':
-        user = Employee.query.get(user_id)
-    else:
-        flash('Invalid user type.', 'danger')
-        return redirect(url_for('login'))
-
-    # Make sure the user exists in the database
-    if not user:
-        flash('User not found.', 'danger')
-        return redirect(url_for('login'))
-
-    # Handle form submission
     if request.method == 'POST':
         try:
-            user.name = request.form['full_name']
-            user.email = request.form['email']
-            user.mobile_no = request.form['phone']
-            user.address = request.form['address']
+            admin.name = request.form['full_name']
+            admin.email = request.form['email']
+            admin.mobile_no = request.form['phone']
+            admin.address = request.form['address']
 
-            # Save the updated user information in the database
             db.session.commit()
             flash('Profile updated successfully!', 'success')
         except Exception as e:
             flash(f'Error updating profile: {e}', 'danger')
 
-        return redirect(url_for('profile'))
+        return redirect(url_for('admin_profile'))
 
-    # Render the profile template with the user information
-    return render_template('profiles.html', user=user)
+    return render_template('Admin/a_profile.html', admin=admin)
 
+@app.route('/employee_profile', methods=['GET', 'POST'])
+@login_required
+def employee_profile():
+    user_id = session.get('user_id')
+
+    employee = Employee.query.get(user_id)
+    if not employee:
+        flash('Employee not found.', 'danger')
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        try:
+            employee.name = request.form['full_name']
+            employee.email = request.form['email']
+            employee.mobile_no = request.form['phone']
+
+            db.session.commit()
+            flash('Profile updated successfully!', 'success')
+        except Exception as e:
+            flash(f'Error updating profile: {e}', 'danger')
+
+        return redirect(url_for('employee_profile'))
+
+    return render_template('Employee/e_profile.html', employee=employee)
 
 @app.route('/employee-management', methods=['GET', 'POST'])
 @login_required

@@ -1,31 +1,24 @@
 {% extends 'base.html' %}
 
-{% block title %}User Profile{% endblock %}
+{% block title %}Admin Profile{% endblock %}
 
 {% block content %}
-
 <nav class="navbar navbar-expand-lg" style="background-color: blue;">
     <div class="container-fluid">
         <a class="navbar-brand text-white" href="{{ url_for('home') }}">Navbar</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+            aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 {% if 'user_id' in session %}
-                {% if user.user_type == 'admin' %}
                 <li class="nav-item">
                     <a class="nav-link text-white" href="{{ url_for('admin_dashboard') }}">Dashboard</a>
                 </li>
-                {% endif %}
-                {% if user.user_type == 'employee' %}
                 <li class="nav-item">
-                    <a class="nav-link text-white" href="{{ url_for('generate_bill') }}">Generate Bill</a>
-                </li>
-                {% endif %}
-                <li class="nav-item">
-                    <a class="nav-link text-white" href="{{ url_for('profile') }}">Profile</a>
+                    <a class="nav-link text-white" href="{{ url_for('admin_profile') }}">Profile</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-white" href="{{ url_for('logout') }}">Log Out</a>
@@ -42,9 +35,8 @@
         </div>
     </div>
 </nav>
-
 <div class="container mt-5">
-    <h2 class="text-center">Profile</h2>
+    <h2 class="text-center">Admin Profile</h2>
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
@@ -52,23 +44,19 @@
                     <form method="POST">
                         <div class="form-group">
                             <label for="full_name">Full Name</label>
-                            <input type="text" class="form-control" id="full_name" name="full_name"
-                                value="{{ user.name }}" required>
+                            <input type="text" class="form-control" id="full_name" name="full_name" value="{{ admin.name }}" required>
                         </div>
                         <div class="form-group">
                             <label for="email">Email address</label>
-                            <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}"
-                                required>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ admin.email }}" required>
                         </div>
                         <div class="form-group">
                             <label for="phone">Phone Number</label>
-                            <input type="tel" class="form-control" id="phone" name="phone" value="{{ user.mobile_no }}"
-                                required>
+                            <input type="tel" class="form-control" id="phone" name="phone" value="{{ admin.mobile_no }}" required>
                         </div>
                         <div class="form-group">
                             <label for="address">Address</label>
-                            <textarea class="form-control" id="address" name="address" rows="3"
-                                required>{{ user.address }}</textarea>
+                            <textarea class="form-control" id="address" name="address" rows="3" required>{{ admin.address }}</textarea>
                         </div>
                         <div class="btn-center">
                             <button type="submit" class="btn btn-primary">Update Profile</button>
@@ -79,5 +67,4 @@
         </div>
     </div>
 </div>
-
 {% endblock %}
