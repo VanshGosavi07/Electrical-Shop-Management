@@ -51,7 +51,7 @@ def admin_dashboard():
 @login_required
 def admin_profile():
     user_id = session.get('user_id')
-    
+
     admin = Admin.query.get(user_id)
     if not admin:
         flash('Admin not found.', 'danger')
@@ -72,6 +72,7 @@ def admin_profile():
         return redirect(url_for('admin_profile'))
 
     return render_template('Admin/a_profile.html', admin=admin)
+
 
 @app.route('/employee_profile', methods=['GET', 'POST'])
 @login_required
@@ -97,6 +98,7 @@ def employee_profile():
         return redirect(url_for('employee_profile'))
 
     return render_template('Employee/e_profile.html', employee=employee)
+
 
 @app.route('/employee-management', methods=['GET', 'POST'])
 @login_required
@@ -155,11 +157,34 @@ def inventory_management():
     return render_template('Admin/inventory_management.html', items=items)
 
 
-@app.route('/statistics')
+@app.route('/delete_employee/<int:employee_id>', methods=['POST'])
 @login_required
 @admin_required
-def statistics():
-    return render_template("Admin/statistics.html")
+def delete_employee(employee_id):
+    employee = Employee.query.get_or_404(employee_id)
+
+    try:
+        db.session.delete(employee)
+        db.session.commit()
+        flash('Employee deleted successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()  # Rollback in case of error
+        flash(f'Error deleting employee: {e}', 'danger')
+
+    return redirect(url_for('employee_management'))
+
+
+@app.route('/delete_item/<int:item_id>', methods=['POST'])
+def delete_item(item_id):
+    # Logic to delete the item from the database based on item_id
+    item = InventoryItem.query.get(item_id)
+    if item:
+        db.session.delete(item)
+        db.session.commit()
+        flash('Item deleted successfully!', 'success')
+    else:
+        flash('Item not found!', 'danger')
+    return redirect(url_for('inventory_management'))
 
 
 @app.route('/generate_bill')

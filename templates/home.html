@@ -1,55 +1,138 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
-{% block title %}Home{% endblock %}
+{% block title %}Landing Page{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h1 class="mb-4">Available Routes</h1>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th scope="col">Page</th>
-                <th scope="col">Link</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Home</td>
-                <td><a href="/">Home</a></td>
-            </tr>
-            <tr>
-                <td>Admin Dashboard</td>
-                <td><a href="/admin_dashboard">Admin Dashboard</a></td>
-            </tr>
-            <tr>
-                <td>Profile</td>
-                <td><a href="/profile">Profile</a></td>
-            </tr>
-            <tr>
-                <td>Employee Management</td>
-                <td><a href="/employee-management">Employee Management</a></td>
-            </tr>
-            <tr>
-                <td>Inventory Management</td>
-                <td><a href="/inventory-management">Inventory Management</a></td>
-            </tr>
-            <tr>
-                <td>Statistics</td>
-                <td><a href="/statistics">Statistics</a></td>
-            </tr>
-            <tr>
-                <td>Generate Bill</td>
-                <td><a href="/generate_bill">Generate Bill</a></td>  
-            </tr>
-            <tr>
-                <td>Admin Register</td>
-                <td><a href="/register">Admin Register</a></td>  
-            </tr>
-            <tr>
-                <td>Login</td>
-                <td><a href="/login">Login</a></td>  
-            </tr>
-        </tbody>
-    </table>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container">
+        <a class="navbar-brand font-weight-bold" href="/">Electronic Shop Management</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('register') }}">Register</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Login Modal -->
+<div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" id="loginModalLabel">Login</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="login-type">Login as:</label>
+                    <select class="form-control" id="login-type">
+                        <option value="employee">Employee</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary btn-block" id="login-btn">Login</button>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- Register Modal -->
+<div class="modal fade" id="registerModal" tabindex="-1" role="dialog" aria-labelledby="registerModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" id="registerModalLabel">Register</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="register-type">Register as:</label>
+                    <select class="form-control" id="register-type">
+                        <option value="customer">Customer</option>
+                        <option value="employee">Employee</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary btn-block" id="register-btn">Register</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Electronics Image (Full Width) -->
+<div class="container-fluid p-0">
+    <img src="/static/assest/electronics.jpg" alt="Electronics Image" class="img-fluid w-100">
+</div>
+
+<!-- Trendy Items Section -->
+<div class="container mt-5">
+    <h2 class="text-center mb-5">Trendy Items</h2>
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm" style="width: 100%; height: 100%;">
+                <img src="/static/assest/laptop.jpeg" alt="Laptop" class="card-img-top">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Laptop</h5>
+                    <p class="card-text">High-performance laptop for everyday use.</p>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-dark" data-toggle="modal" data-target="#loginModal">View Details</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm" style="width: 100%; height: 100%;">
+                <img src="/static/assest/phone.jpeg" alt="Smartphone" class="card-img-top">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Smartphone</h5>
+                    <p class="card-text">Latest generation smartphone with advanced features.</p>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-dark" data-toggle="modal" data-target="#loginModal">View Details</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm" style="width: 100%; height: 100%;">
+                <img src="/static/assest/headphones.jpg" alt="Headphones" class="card-img-top">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Headphones</h5>
+                    <p class="card-text">Wireless headphones with noise-cancelling technology.</p>
+                    <a href="#" class="btn btn-outline-dark" data-toggle="modal" data-target="#loginModal">View Details</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contact Us Section -->
+<div class="container-fluid bg-dark text-white py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-3 text-center">
+            <h5>Email:</h5>
+            <p><a href="mailto:support@electronicshop.com" class="text-white">support@electronicshop.com</a></p>
+        </div>
+        <div class="col-md-3 text-center">
+            <h5>Phone:</h5>
+            <p><a href="tel:+1234567890" class="text-white">+123-456-7890</a></p>
+        </div>
+        <div class="col-md-3 text-center">
+            <h5>Address:</h5>
+            <p>123 Electronics St, Tech City, Country 456789</p>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="bg-dark text-white text-center py-3 mt-5">
+    <p class="mb-0">&copy; 2023 Electronic Shop Management. All rights reserved.</p>
+</footer>
 {% endblock %}
