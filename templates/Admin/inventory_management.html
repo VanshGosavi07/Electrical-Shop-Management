@@ -72,7 +72,7 @@
             <input type="number" class="form-control" name="itemPrice" id="itemPrice" placeholder="Enter item price" required>
             <div class="invalid-feedback">Please enter item price.</div>
         </div>
-        <button type="submit" class="btn btn-primary">Add/Update Item</button>
+        <button type="submit" class="btn btn-primary">Add Item</button>
     </form>
 
     <h2 class="mt-5">Inventory List</h2>
@@ -83,6 +83,7 @@
                 <th>Item Name</th>
                 <th>Quantity</th>
                 <th>Price</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody id="inventory-list">
@@ -92,6 +93,12 @@
                 <td>{{ item.name }}</td>
                 <td>{{ item.quantity }}</td>
                 <td>{{ item.price }}</td>
+                <td>
+                    <!-- Form for deleting an item -->
+                    <form method="POST" action="{{ url_for('delete_item', item_id=item.id) }}" style="display:inline;">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
